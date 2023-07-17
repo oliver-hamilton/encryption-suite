@@ -14,9 +14,15 @@
             <a href="onetimepad.html">One-time pad</a>
         </div>
         <hr>
-        <input type="file">
-        <div>
-            <button onclick="encrypt()">Encrypt!</button>
-        </div>
+        <h2>Encrypt</h2>
+        <label for="hiddenMessageEncrypt">Enter a message to hide: </label><input type="text" id="hiddenMessageEncrypt"> <br>
+        <input type="file" id="fileInputEncrypt"> <br>
+        <button onclick="encrypt()">Encrypt!</button>
+
+        <h2>Decrypt</h2>
+        <input type="file" id="fileInputDecrypt"> <br>
+        <button onclick="decrypt()">Decrypt!</button>
+        <output id="decryptedMessage"></output>
+
     </body>
 </html>
