@@ -2,12 +2,12 @@
 <html>
     <head>
         <link rel="stylesheet" href="style.css">
-        <script src="transposition.js"></script>
-        <title>Transposition</title>
+        <script src="polyalphabetic.js"></script>
+        <title>Vigenère Cipher</title>
     </head>
 
     <body>
-        <h1>Transposition</h1>
+        <h1>Vigenère Cipher</h1>
         <div id="banner">
             <a href="index.html">Home</a>
             <a href="steganography.html">Steganography</a>
@@ -21,16 +21,12 @@
         <h2>Encrypt</h2>
         <label for="plaintext">Enter a message to encrypt: </label><input type="text" id="plaintext"> <br>
         <label for="encryptionKey">Enter the encryption key: </label><input type="text" id="encryptionKey"> <br>
-        <label for="rowLengthEncrypt">Enter the row length: </label><input type="number" min="1" value="4" id="rowLengthEncrypt"> <br>
-        <label for="doubleEncrypt">Double transposition? </label><input type="checkbox" id="doubleEncrypt"> <br>
         <label for="encipheredMessage">Enciphered message: </label><output id="encipheredMessage"></output> <br>
         <button onclick="encrypt()">Encrypt!</button>
 
         <h2>Decrypt</h2>
         <label for="ciphertext">Enter a ciphertext message: </label><input type="text" id="ciphertext"> <br>
         <label for="decryptionKey">Enter the decryption key: </label><input type="text" id="decryptionKey"> <br>
-        <label for="rowLengthDecrypt">Enter the row length: </label><input type="number" min="1" value="4" id="rowLengthDecrypt"> <br>
-        <label for="doubleDecrypt">Double transposition? </label><input type="checkbox" id="doubleDecrypt"> <br>
         <label for="decipheredMessage">Deciphered message: </label><output id="decipheredMessage"></output> <br>
         <button onclick="decrypt()">Decrypt!</button>
 
