@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css">
+        <script src="des.js"></script>
+        <title>DES</title>
+    </head>
+
+    <body>
+        <h1>DES (Data Encryption Standard)</h1>
+        <div id="banner">
+            <a href="index.html">Home</a>
+            <a href="steganography.html">Steganography</a>
+            <a href="xor.html">XOR</a>
+            <a href="transposition.html">Transposition</a>
+            <a href="vigenère.html">Vigenère</a>
+            <a href="des.html">DES</a>
+            <a href="aes.html">AES</a>
+        </div>
+        <hr>
+        <h2>Encrypt</h2>
+        <label for="plaintext">Enter a message to encrypt: </label><input type="text" id="plaintext"> <br>
+        <label for="encryptionKey">Enter the encryption key: </label><input type="text" id="encryptionKey"> <br>
+        <label for="encipheredMessage">Enciphered message: </label><output id="encipheredMessage"></output> <br>
+        <button onclick="encrypt()">Encrypt!</button>
+
+        <h2>Decrypt</h2>
+        <label for="ciphertext">Enter a ciphertext message: </label><input type="text" id="ciphertext"> <br>
+        <label for="decryptionKey">Enter the decryption key: </label><input type="text" id="decryptionKey"> <br>
+        <label for="decipheredMessage">Deciphered message: </label><output id="decipheredMessage"></output> <br>
+        <button onclick="decrypt()">Decrypt!</button>
+    </body>
+</html>
