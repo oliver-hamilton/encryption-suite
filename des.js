@@ -595,38 +595,43 @@ const P_BOX = [
 ];
 
 const HALF_BLOCK_LENGTH = 32;
-const EFFECTIVE_KEY_LENGTH = 48;
+const BLOCK_LENGTH = 64;
+const ROUND_KEY_LENGTH = 48;
+const EFFECTIVE_KEY_LENGTH = 56;
 
-function bitwiseXor(x, y, length) {
-    return (parseInt(x, 2) ^ parseInt(y, 2)).toString(2).padStart(length, "0");
+function bitwiseXor(x, y) {
+    return x.map((xi, i) => (parseInt(xi, 2) ^ parseInt(y[i], 2)).toString(2));
 }
 
 function ip(X) {
-    return X.map((_, index) => X.charAt([IP.indexOf(index)]));
+    return X.map((_, index) => X[IP[index]]);
 }
 
 function ip_inv(X) {
-    return X.map((_, index) => X.charAt([IP_INV.indexOf(index)]));
+    return X.map((_, index) => X[IP_INV[index]]);
 }
 
 function eBox(R) {
-    return R.map((_, index) => R.charAt([E_BOX.indexOf(index)]));
+    return Array(ROUND_KEY_LENGTH).fill(0).map((_, index) => R[E_BOX[index]]);
 }
 
 function keyMixing(R, roundKey) {
-    return bitwiseXor(R, roundKey, EFFECTIVE_KEY_LENGTH);
+    return bitwiseXor(R, roundKey);
 }
 
 function sBox(R) {
-    // Split input into 6-bit substrings
-    const substrings = R.match("/.{6}/g");
+    // Build an array of 6-bit substrings
+    const subarrays = [];
+    for (let i = 0; i < R.length; i += 6) {
+        subarrays.push(R.slice(i, i + 6));
+    }
     // Lookup each string in the appropriate S-box
-    const substitution = substrings.map((substring, index) => S_BOXES[index][parseInt(substring, 2)]);
-    return substitution.map(n => n.toString(2).padStart(4)).join('');
+    const substitution = subarrays.map((subarray, index) => S_BOXES[index][parseInt(subarray.join(''), 2)]);
+    return Array.from(substitution.map(n => n.toString(2).padStart(4, "0")).join(''));
 }
 
 function pBox(R) {
-    return R.map((_, index) => R.charAt([P_BOX.indexOf(index)]));
+    return R.map((_, index) => R[P_BOX[index]]);
 }
 
 function f(R, roundKey) {
@@ -634,24 +639,32 @@ function f(R, roundKey) {
 }
 
 function performRound(L, R, roundKey) {
-    return (R, bitwiseXor(L, f(R, roundKey), HALF_BLOCK_LENGTH));
+    return [R, bitwiseXor(L, f(R, roundKey))];
 }
 
 function leftRotate(X) {
-    return X.slice(1) + X.charAt(0);
+    const res = X.slice(1);
+    res.push(X[0]);
+    return res;
+}
+
+function rightRotate(X) {
+    const res = X.slice(0, X.length - 1);
+    res.unshift(X[X.length - 1]);
+    return res;
 }
 
 function pc1(key) {
-    return key.map((_, index) => key.charAt([PC_1.indexOf(index)]));
+    return key.map((_, index) => key[PC_1[index]]).slice(0, EFFECTIVE_KEY_LENGTH);
 }
 
 function pc2(partialRoundKey) {
-    return partialRoundKey.map((_, index) => partialRoundKey.charAt([PC_2.indexOf(index)]));
+    return partialRoundKey.map((_, index) => partialRoundKey[PC_2[index]]).slice(0, ROUND_KEY_LENGTH);
 }
 
 function nextRoundKey(tempRoundKey, i) {
     let L = tempRoundKey.slice(0, tempRoundKey.length / 2);
-    let R = tempRoundKey.slice(tempRoundKey.length / 2, tempRoundKey.length / 2);
+    let R = tempRoundKey.slice(tempRoundKey.length / 2, tempRoundKey.length);
 
     L = leftRotate(L);
     R = leftRotate(R);
@@ -660,30 +673,80 @@ function nextRoundKey(tempRoundKey, i) {
         L = leftRotate(L);
         R = leftRotate(R);
     }
-    return L + R;
+    return L.concat(R);
+}
+
+function nextRoundKeyInv(tempRoundKey, i) {
+    let L = tempRoundKey.slice(0, tempRoundKey.length / 2);
+    let R = tempRoundKey.slice(tempRoundKey.length / 2, tempRoundKey.length);
+
+    L = rightRotate(L);
+    R = rightRotate(R);
+
+    if (![1, 2, 9, 16].includes(i)) {
+        L = rightRotate(L);
+        R = rightRotate(R);
+    }
+    return L.concat(R);
 }
 
 function encrypt() {
-    // Get the plaintext and encryption key
-    const plaintext = document.getElementById("plaintext").value;
-    const key = document.getElementById("encryptionKey").value;
+    // Get the plaintext and encryption key (converting from hex to binary)
+    const plaintext = Array.from(Array.from(document.getElementById("plaintext").value).map(symbol => parseInt(symbol, 16).toString(2).padStart(4, "0")).join(''));
+    // .value, 16).toString(2).padStart(BLOCK_LENGTH, "0"));
+    const key = Array.from(Array.from(document.getElementById("encryptionKey").value).map(symbol => parseInt(symbol, 16).toString(2).padStart(4, "0")).join(''));
 
-    const tempRoundKey = pc1(key);
+    let tempRoundKey = pc1(key);
 
     // Perform an initial permutation
     const ip_res = ip(plaintext);
 
-    const L = ip_res.slice(0, ip_res.length / 2);
-    const R = ip_res.slice(ip_res.length / 2, ip_res.length / 2);
+    let L = ip_res.slice(0, ip_res.length / 2);
+    let R = ip_res.slice(ip_res.length / 2, ip_res.length);
 
     // Perform 16 rounds of operations
     for (let i = 1; i <= 16; i++) {
-        let roundKey = pc2(nextRoundKey(tempRoundKey));
+        tempRoundKey = nextRoundKey(tempRoundKey, i)
+        let roundKey = pc2(tempRoundKey);
         [L, R] = performRound(L, R, roundKey);
     }
-    return ip_inv(R + L);
+    const res = ip_inv(R.concat(L));
+    // Get the final hex result
+    let resHex = "";
+    for (let i = 0; i < BLOCK_LENGTH; i += 4) {
+        resHex += parseInt(res.slice(i, i + 4).join(''), 2).toString(16);
+    }
+    document.getElementById("encipheredMessage").innerHTML = resHex;
+    // return ip_inv(R.concat(L));
 }
 
 function decrypt() {
+    // Get the ciphertext and decryption key (converting from hex to binary)
+    const ciphertext = Array.from(Array.from(document.getElementById("ciphertext").value).map(symbol => parseInt(symbol, 16).toString(2).padStart(4, "0")).join(''));
+    // .value, 16).toString(2).padStart(BLOCK_LENGTH, "0"));
+    const key = Array.from(Array.from(document.getElementById("decryptionKey").value).map(symbol => parseInt(symbol, 16).toString(2).padStart(4, "0")).join(''));
 
+    let tempRoundKey = pc1(key);
+    let roundKey = pc2(tempRoundKey);
+
+    // Perform an initial permutation
+    const ip_res = ip(ciphertext);
+
+    let L = ip_res.slice(0, ip_res.length / 2);
+    let R = ip_res.slice(ip_res.length / 2, ip_res.length);
+
+    // Perform 16 rounds of operations
+    for (let i = 16; i >= 1; i--) {
+        [L, R] = performRound(L, R, roundKey);
+        tempRoundKey = nextRoundKeyInv(tempRoundKey, i)
+        roundKey = pc2(tempRoundKey);
+    }
+    const res = ip_inv(R.concat(L));
+    // Get the final hex result
+    let resHex = "";
+    for (let i = 0; i < BLOCK_LENGTH; i += 4) {
+        resHex += parseInt(res.slice(i, i + 4).join(''), 2).toString(16);
+    }
+    document.getElementById("decipheredMessage").innerHTML = resHex;
+    // return ip_inv(R.concat(L));
 }
