@@ -40,7 +40,7 @@ let W = [];
 const ARRAY_LENGTH = 4;
 
 function rotateLeft(arr, i) {
-    return arr.slice(arr.length - i, i).concat(arr.slice(0, arr.length - i));
+    return arr.slice(i, arr.length).concat(arr.slice(0, i));
 }
 
 function addGF(x, y) {
@@ -51,7 +51,7 @@ function multiplyGF(x, y) {
     const res = Array(15).fill(0);
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
-            res[14 - i - j] = (parseInt(x[i], 2) % 2) ^ (parseInt(y[j], 2) % 2);
+            res[14 - i - j] = res[14 - i - j] ^ (parseInt(x[7 - i], 2) * parseInt(y[7 - j], 2));
         }
     }
     // Reduce modulo irreducible polynomial x^8 + x^4 + x^3 + x + 1
@@ -61,11 +61,9 @@ function multiplyGF(x, y) {
         while (i < 15 && res[i] == 0) {
             i++;
         }
-        let shift = 0;
-        if (6 - i >= 0) {
-            shift = 6 - i;
-        } 
+        let shift = 6 - i;
         
+
         res[14-8 - shift] = res[14-8 - shift] ^ 1;
         res[14-4 - shift] = res[14-4 - shift] ^ 1;
         res[14-3 - shift] = res[14-3 - shift] ^ 1;
@@ -100,63 +98,70 @@ function toByte(n) {
 }
 
 function mixColumns(X) {
+    const newX = [Array(4).fill(0), Array(4).fill(0), Array(4).fill(0), Array(4).fill(0)];
     for (let i = 0; i < ARRAY_LENGTH; i++) {
-        X[0][i] = addGF(addGF(addGF(
+        newX[0][i] = addGF(addGF(addGF(
                                     multiplyGF(toByte(2), X[0][i]), 
                                     multiplyGF(toByte(3), X[1][i])
                                    ), 
                                    multiplyGF(toByte(1), X[2][i])
                              ), 
                              multiplyGF(toByte(1), X[3][i])
-                       );
+                       ).join('');
 
-        X[1][i] = addGF(addGF(addGF(
+        newX[1][i] = addGF(addGF(addGF(
                                     multiplyGF(toByte(1), X[0][i]), 
                                     multiplyGF(toByte(2), X[1][i])
                                    ), 
                                    multiplyGF(toByte(3), X[2][i])
                              ), 
                              multiplyGF(toByte(1), X[3][i])
-                       );
+                       ).join('');
 
-        X[2][i] = addGF(addGF(addGF(
+        newX[2][i] = addGF(addGF(addGF(
                                     multiplyGF(toByte(1), X[0][i]), 
                                     multiplyGF(toByte(1), X[1][i])
                                    ), 
                                    multiplyGF(toByte(2), X[2][i])
                              ), 
                              multiplyGF(toByte(3), X[3][i])
-                       );
+                       ).join('');
 
-        X[3][i] = addGF(addGF(addGF(
+        newX[3][i] = addGF(addGF(addGF(
                                     multiplyGF(toByte(3), X[0][i]), 
                                     multiplyGF(toByte(1), X[1][i])
                                    ), 
                                    multiplyGF(toByte(1), X[2][i])
                              ), 
                              multiplyGF(toByte(2), X[3][i])
-                       );
+                       ).join('');
     }
-    return X;
+    return newX;
 }
 
 function addRoundKey(X, K) {
     for (let i = 0; i < ARRAY_LENGTH; i++) {
         for (let j = 0; j < ARRAY_LENGTH; j++) {
-            X[i][j] = addGF(Array.from(X[i][j]), K[i][j]).join('');
+            X[i][j] = addGF(Array.from(X[i][j]), K[j].slice(8*i, 8*i + 8)).join('');
         }
     }
     return X;
 }
 
 function subWord(word) {
+    newWord = Array(4);
     for (let i = 0; i < word.length; i++) {
         // Get the most and least significant nibble values
-        const upperNibble = parseInt(word[i].slice(0, 4), 2);
-        const lowerNibble = parseInt(word[i].slice(4, 8), 2);
+        let upperNibble = parseInt(word[i].slice(0, 4).join(''), 2);
+        let lowerNibble = parseInt(word[i].slice(4, 8).join(''), 2);
         // Update the appropriate word entry
-        word[i] = toByte(S_BOX[upperNibble][lowerNibble]);
+        newWord[i] = toByte(S_BOX[upperNibble][lowerNibble]);
     }
+    return newWord;
+}
+
+function bitwiseXor(x, y) {
+    return x.map((xi, i) => (parseInt(xi, 2) ^ parseInt(y[i], 2)).toString(2));
 }
 
 function getRoundKey(K, i) {
@@ -166,12 +171,13 @@ function getRoundKey(K, i) {
             W.push(K[j]);
         }
         else if (j >= N && j % N == 0) {
-            const rotateRes = rotateLeft(W[j-1]);
-            const splitRes = Array(4);
+            let rotateRes = rotateLeft(W[j-1], 8);
+            let splitRes = Array(4);
             for (let k = 0; k < 4; k++) {
-                splitRes[k] = rotateRes.slice(4*k, 4*(k+1));
+                splitRes[k] = rotateRes.slice(8*k, 8*k + 8);
             }
-            W.push(bitwiseXor(bitwiseXor(W[j - N], Array.from(subWord(splitRes, 1).join('')))), Array.from(RCON[j/N].map(n => toByte(n)).join('')));
+            let temp = bitwiseXor(Array.from(RCON[Math.floor(j/N)].map(n => toByte(n)).join('')), Array.from(subWord(splitRes).join('')));
+            W.push(bitwiseXor(temp, Array.from(W[j - N])));
         }
         else {
             W.push(bitwiseXor(W[j - N], W[j - 1]));
@@ -181,6 +187,9 @@ function getRoundKey(K, i) {
 }
 
 function encrypt() {
+    // TESTING
+    // console.log(multiplyGF(["0", "1", "0", "1", "0", "0", "1", "1"], ["1", "1", "0", "0", "1", "0", "1", "0"]));
+
     // Get the plaintext and encryption key (converting from hex to binary)
     const plaintext = Array.from(Array.from(document.getElementById("plaintext").value).map(symbol => symbol.charCodeAt(0).toString(2).padStart(8, "0")));
     // .value, 16).toString(2).padStart(BLOCK_LENGTH, "0"));
@@ -196,22 +205,32 @@ function encrypt() {
             plaintextMatrix[j][i] = plaintext[ARRAY_LENGTH * i + j];
         }
     }
+    plaintextMatrix[3][3] = toByte(0x1);
 
     let roundKey = getRoundKey(K, 0);
     let res = addRoundKey(plaintextMatrix, roundKey);
 
     for (let i = 1; i <= 9; i++) {
-        roundKey = getRoundKey(1);
+        roundKey = getRoundKey(K, i);
         res = subBytes(res);
         res = shiftRows(res);
         res = mixColumns(res);
         res = addRoundKey(res, roundKey);
     }
+    roundKey = getRoundKey(K, 10);
     res = subBytes(res);
     res = shiftRows(res);
     res = addRoundKey(res, roundKey);
 
-    document.getElementById("encipheredMessage").innerHTML = res;}
+    // Get the final hex result
+    let resHex = "";
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            resHex += parseInt(res[j][i], 2).toString(16);
+        }
+    }
+    document.getElementById("encipheredMessage").innerHTML = resHex;
+}
 
 function decrypt() {
 
