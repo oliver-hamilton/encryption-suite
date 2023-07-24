@@ -34,5 +34,15 @@
         <label for="decipheredMessage">Deciphered message: </label><output id="decipheredMessage"></output> <br>
         <button onclick="decrypt()">Decrypt!</button>
 
+        <h2>Implementation details</h2>
+        <ol>
+            <li>The plaintext is rearranged into rows of fixed length, given by the <b>row length</b> specified above. The characters of the message fill the grid from left to right, starting a new row below where necessary. Any unfilled cells in the last row of the grid are filled with the 'X' character.</li>
+            <li>The encryption key determines the order in which the columns of the grid are read. If the ith character of the encryption key is the first alphabetically in the key, then the ith column of the grid is read first.</li>
+            <li>Similarly, if the jth character of the encryption key is the second alphabetically in the key, then the jth column is the next one to be read.</li>
+            <li>Concatenating the strings read down each of these columns gives the resulting ciphertext.
+        </ol>
+        <p>
+        This tool also allows for <b>double transposition</b>. This is simply where we apply the algorithm once, and then apply it once more to the resulting ciphertext.
+        </p>
     </body>
 </html>

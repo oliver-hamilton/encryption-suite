@@ -28,5 +28,19 @@
         <button onclick="decrypt()">Decrypt!</button>
         <output id="decryptedMessage"></output>
 
+        <h2>Implementation details</h2>
+        <p>
+        <b>Steganography</b> is the hiding of a data within some other message, typically an image or audio file. This has an advantage over encryption in that it is unlikely to arouse suspicion - an image / audio file harbouring a secret message appears to just be a regular image / audio file.
+        </p>
+        <p>
+        There exist many different techniques for steganography in the same way that there exist many different ciphers in cryptography. In this implementation, we use <b>LSB (Least Significant Bit) insertion</b>: each consecutive bit of the message to be concealed replaces the least significant bit representing the RGB colour of each consecutive pixel. By replacing the least significant bit, the transformed image appears identical to the original.
+        </p>
+        <p>Some image formats, such as PNG, support transparency and therefore store pixels in <b>RGBA</b> format, with an extra <b>alpha</b> channel as well as the colour channels. We could also hide date in the least significant bit of this channel, but do not in this implementation owing to lossy conversion between colour spaces in the Canvas APIs (see <a href="https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-getimagedata">the specification</a> for more details). Thus we only hide data in the least significant bits of the red, green and blue colour channels of each pixel.</p>
+
+        <p>We could also encrypt each message with some shared key before using steganography, so that it can be decrypted by the receiver who also has knowledge of the key. This provides an added level of security: if someone runs the file through some software and detects that steganography has been used, they still can't read the message without the key. This could be achieved by using a symmetric cipher tool (e.g. the <a href="des.html">DES</a> or <a href="aes.html">AES</a> cipher tools) and then using this steganography tool to hide the ciphertext in an image.</p>
+
+
+
+
     </body>
 </html>

@@ -29,5 +29,14 @@
         <label for="decryptionKey">Enter the decryption key: </label><input type="text" id="decryptionKey"> <br>
         <label for="decipheredMessage">Deciphered message: </label><output id="decipheredMessage"></output> <br>
         <button onclick="decrypt()">Decrypt!</button>
+
+        <h2>Implementation details</h2>
+        This XOR encryption tool works as follows:
+        <ol>
+            <li>The encryption key is repeated enough times so that its length matches the length of the plaintext. If it exceeds the plaintext length, then characters are removed from the end of the repeated key until the lengths match.</li>
+            <li>Each character of the plaintext is converted to its ASCII code, represented in binary. This is then XORed with the ASCII code of the corresponding character in the expanded key computed in the previous step, producing a result.</li>
+            <li>The binary strings representing each of these results are concatenated to produce the resulting ciphertext.</li>
+        </ol>
+
     </body>
 </html>
