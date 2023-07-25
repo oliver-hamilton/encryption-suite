@@ -29,5 +29,22 @@
         <label for="decryptionKey">Enter the decryption key: </label><input type="text" id="decryptionKey"> <br>
         <label for="decipheredMessage">Deciphered message: </label><output id="decipheredMessage"></output> <br>
         <button onclick="decrypt()">Decrypt!</button>
+        
+        <h2>Implementation details</h2>
+        <p><b>DES (Data Encryption Standard)</b> is a symmetric block cipher that uses a 64-bit block size and a key with an <b>effective length</b> of 56 bits (it is actually 64 bits, but 8 are discarded, and so could be used e.g. as parity bits).</p>
+        <p>The algorithm uses the Feistel scheme, which has the effect of operating separately on the left and right halves of the message, and 'folding' them into one another through successive rounds. One part of this structure is the <b>Feistel function</b>, with 4 key steps:</p>
+        <ol>
+            <li><b>Expansion</b> - The 32-bit half of the message is expanded to 48 bits by duplicating half of the bits.</li>
+            <li><b>Key combination</b> - The 48-bit result of the previous step is XORed with a 48-bit <b>round key</b>.</li>
+            <li><b>Substitution</b> - The 48-bit result is divided into a total of eight 6-bit sequences. Each is transformed to a 4-bit sequence by a different substitution box (S-box). This gives a 32-bit output.</li>
+            <li><b>Permutation - The 32-bits from the previous stage are shuffled.</b></li>
+        </ol>
+        <p>The expansion, substituion and permutation stages are implemented using lookup tables, and the key combination step is regular bitwise XOR. Hence the Feistel function is reasonably quick to implement.</p>
+
+        <p>The generation of the round keys from the main input key is achieved through 2 lookup tables and bitwise left shifts, and so can also be implemented without much code.</p>
+
+        <p>Each round of the algorithm consists of applying the Feistel function in accordance with the Feistel scheme.</p>
+
+        <p>There are also fixed initial and final permutations applied at the beginning and end of the algorithm respectively. These have no cryptographic significance, but were included to make DES easier to implement in hardware back in the 1970s. In this tool, we simply implement them using lookup tables.</p>
     </body>
 </html>

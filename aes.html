@@ -29,5 +29,18 @@
         <label for="decryptionKey">Enter the decryption key: </label><input type="text" id="decryptionKey"> <br>
         <label for="decipheredMessage">Deciphered message: </label><output id="decipheredMessage"></output> <br>
         <button onclick="decrypt()">Decrypt!</button>
+
+        <h2>Implementation details</h2>
+        <p><b>AES (Advanced Encryption Standard)</b> is a symmetric block cipher designed to supersede DES.Rather than using a Feistel structure, it uses a <b>substitution-permutation network</b> which is designed for more inherent parallelism that can be exploited by modern computer hardware (e.g. GPUs).</p>
+        <p>Each round of AES applies the following steps to the data, organized as a 4x4 matrix of bytes:</p>
+        <ol>
+            <li><b>SubBytes</b> - each byte is substituted for a different bytes given by a lookup table.</li>
+            <li><b>ShiftRows</b> - the ith row (beginning with i = 0) is shifted left i times</li>
+            <li><b>MixColumns</b> - this is one of the more complicated (and interesting) steps. We multiply the result of the previous step by a fixed matrix, but this involves addition and multiplication in a finite field, since we wish for each matrix entry to be between 0 and 255. Addition is just XOR, but multiplication is modulo an <b>irreducible polynomial</b> to stop values from getting too big.</li>
+            <li><b>AddRoundKey</b> - We XOR each entry of the matrix from the previous step with each entry of the matrix containing the round key</li>
+        </ol>
+        <p>The way in which the round keys are derived from the main key is not particularly enlightening, as it's pretty much just performing different shifts and substitutions in different cases.</p>
+
+        <p>Since AES was developed in the early 2000s, long after DES was developed in the 1970s, there is no initial or final permutation. As computing has advanced, the reduction in cross-wiring provided by these permutations was no longer a priority by the 21st century.</p>
     </body>
 </html>

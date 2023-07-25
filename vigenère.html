@@ -30,5 +30,13 @@
         <label for="decipheredMessage">Deciphered message: </label><output id="decipheredMessage"></output> <br>
         <button onclick="decrypt()">Decrypt!</button>
 
+        <h2>Implementation details</h2>
+
+        <p>A <b>polyalphabetic substitution cipher</b> works by using different ciphertext alphabets to encrypt the plaintext.</p>
+
+        <p>The Vigenère cipher is a specific instance of such a cipher, where each letter in the ciphertext is calculated by adding the corresponding letters of the plaintext and key together, then wrapping around to the beginning of the alphabet. Like with the <a href="xor.html">XOR encryption tool</a>, this requires expanding the key to match the length of the plaintext.</p>
+
+        <p>To decrypt a message encrypted in this way, we use subtraction of the characters instead of addition. In all other respects, the encryption and decryption processes are identical.</p>
+
     </body>
 </html>
